@@ -77,7 +77,6 @@ async def get_people(people_id, session):
                     db_card[key] = await get_name(items, session)
                 else:
                     db_card[key] = items
-        print(db_card)
         return db_card
 
 
