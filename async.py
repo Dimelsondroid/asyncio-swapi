@@ -53,6 +53,16 @@ def get_total_people():
     return people['count']
 
 
+async def get_name(link, session):
+    async with session.get(link) as response:
+        card = await response.json()
+        if 'name' in card:
+            name = card['name']
+        elif 'title' in card:
+            name = card['title']
+    return name
+
+
 async def get_people(people_id, session):
     db_card = {}
     async with session.get(f'https://swapi.dev/api/people/{people_id}') as response:
@@ -60,9 +70,14 @@ async def get_people(people_id, session):
         for key, items in full_card.items():
             if key not in EXCLUDE_FIELDS:
                 if type(items) is list:
-                    db_card[key] = ', '.join(items)
+                    names = (get_name(items[i], session) for i in range(0, len(items)))
+                    results = await asyncio.gather(*names)
+                    db_card[key] = ', '.join(results)
+                elif key == 'homeworld':
+                    db_card[key] = await get_name(items, session)
                 else:
                     db_card[key] = items
+        print(db_card)
         return db_card
 
 
